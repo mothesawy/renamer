@@ -7,7 +7,7 @@ Run `renamer --help` for more info.
 ## features:
 
 - This tool can use both relative paths and absolute paths.
-- supports both Windows and Unix path seperators ("/", "\").
+- supports both Windows and Unix path seperators ("/", "\\").
 - Bulk rename files in place or copy to another path.
 - Random renaming mode using uuidv4.
 - Ordered numerical renaming.
