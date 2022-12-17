@@ -476,7 +476,7 @@ Perform renaming with a pattern of text for items' names.
 - [ ] Code refactoring and performance improvements
 - [ ] Recursive renaming
 - [ ] Rename by file type and classify files by file type.
-- [ ] Image Tags for renaming
-- [ ] Audio Tags for renaming
-- [ ] Video Tags for renaming
+- [ ] Image tags for renaming
+- [ ] Audio tags for renaming
+- [ ] Video tags for renaming
 - [ ] Cross-Platform GUI
