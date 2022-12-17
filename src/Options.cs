@@ -2,6 +2,7 @@ using CommandLine;
 
 namespace Renamer;
 
+// TODO: Recurrsive Renaming
 // TODO: Add types flag(s)
 // TODO: Photos tags
 // TODO: Audio files tags
@@ -21,7 +22,7 @@ class BaseOptions
     [Option("suffix", Required = false, HelpText = "Suffix after filenames.")]
     public string suffix { get; set; } = "";
 
-    [Option("not-safe", Default = false, Required = false, HelpText = "Perform the renaming without checking for overwriting (faster but may cause data loss).")]
+    [Option("not-safe", Default = false, Required = false, HelpText = "Renaming without checking for naming conflicts (faster but may cause data loss).")]
     public bool notSafe { get; set; }
 
     [Option("ignore-dirs", Default = false, Required = false, HelpText = "Exclude directories from renaming.")]
@@ -46,6 +47,11 @@ class BaseOptionsWithReverse : BaseOptions
 [Verb("random", HelpText = "Rename items randomly using UUID V4.")]
 class RandomOptions : BaseOptionsWithReverse
 {
+}
+
+[Verb("random", HelpText = "Rename items randomly using UUID V4.")]
+class RandomOptionsForPattern : RandomOptions
+{
     [Option('l', "length", Default = 32, Required = false, HelpText = "Length of the random name (min: 12, max: 32). (With pattern mode only)")]
     public int length { get; set; }
 }
@@ -56,17 +62,24 @@ class NumericalOptions : BaseOptionsWithReverse
     [Option('s', "start", Default = 1, Required = false, HelpText = "Start renaming with this value.")]
     public int start { get; set; }
 
+    [Option('i', "increment", Default = 1, Required = false, HelpText = "Increase number by this value.")]
+    public int increment { get; set; }
+
     [Option('z', "zeros", Default = 0, Required = false, HelpText = "Leading zeros of names.")]
     public int zeros { get; set; }
-
-    [Option("modulo", Default = 0, Required = false, HelpText = "Perform modulo on generated numbers. (With pattern mode only)")]
-    public int modulo { get; set; }
-
-    [Option("mult", Default = 0, Required = false, HelpText = "Increace The number every nth [mult] iteration. (With pattern mode only)")]
-    public int mult { get; set; }
 }
 
-[Verb("alphabetical", HelpText = "alphabetical: Alphabetical renaming for items (a, b, c, ..., z, za, zb, ...).")]
+[Verb("numerical", HelpText = "Numerical renaming for items (start, start + 1, start + 2, ...).")]
+class NumericalOptionsForPattern : NumericalOptions
+{
+    [Option("range", Required = false, HelpText = "A range to repeat the numbers within")]
+    public IEnumerable<int>? range { get; set; }
+
+    [Option("every", Default = 0, Required = false, HelpText = "Increace The number every nth iteration. (With pattern mode only)")]
+    public int every { get; set; }
+}
+
+[Verb("alphabetical", HelpText = "Alphabetical: Alphabetical renaming for items (a, b, c, ..., z, za, zb, ...).")]
 class AlphabeticalOptions : BaseOptionsWithReverse
 {
     [Option('u', "upper", Default = false, Required = false, HelpText = "Convert the generated name to upper case.")]
@@ -84,7 +97,7 @@ class ReverseOptions : BaseOptions
 [Verb("replace", HelpText = "Replace part of text in items names with another text.")]
 class ReplaceOptions : BaseOptionsWithReverse
 {
-    [Option("from", Default = "", Required = true, HelpText = "The text to be replaced.")]
+    [Option("from", Required = true, HelpText = "The text to be replaced.")]
     public string from { get; set; } = "";
 
     [Option("to", Default = "", Required = false, HelpText = "The text to be replaced.")]

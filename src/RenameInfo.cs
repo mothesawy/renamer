@@ -1,71 +1,91 @@
 using Renamer.RenameUtils;
 using System.Globalization;
-using Renamer;
 
 namespace Renamer.RenameInfo;
 
 class RenamerInfo
 {
-    public static Info Random(RandomOptions opts, bool fromCmd)
+    public static Info Random(RandomOptions opts)
     {
         var info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
 
         for (var i = 0; i < info.NewDirsNames.Length; i++)
         {
-            var uuid = Guid.NewGuid().ToString().Replace("-", "");
-            info.NewDirsNames[i] = uuid;
+            info.NewDirsNames[i] = RenamerUtils.GenerateUUID(32);
         }
 
         for (var i = 0; i < info.NewFilesNames.Length; i++)
         {
-            var uuid = Guid.NewGuid().ToString().Replace("-", "");
-            info.NewFilesNames[i] = uuid;
-        }
-
-        if (opts.newPath == "" && !opts.notSafe && fromCmd)
-        {
-            var newDirsNames = (string[])info.NewDirsNames.Clone(); var newFilesNames = (string[])info.NewFilesNames.Clone();
-            RenameMethods.Temp(opts.path, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info.NewDirsNames = newDirsNames;
-            info.NewFilesNames = newFilesNames;
+            info.NewFilesNames[i] = RenamerUtils.GenerateUUID(32);
         }
 
         return info;
     }
 
-    public static Info Numerical(NumericalOptions opts, bool fromCmd)
+    public static Info RandomForPattern(RandomOptionsForPattern opts)
+    {
+        var info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
+
+        for (var i = 0; i < info.NewDirsNames.Length; i++)
+        {
+            info.NewDirsNames[i] = RenamerUtils.GenerateUUID(opts.length);
+        }
+
+        for (var i = 0; i < info.NewFilesNames.Length; i++)
+        {
+            info.NewFilesNames[i] = RenamerUtils.GenerateUUID(opts.length);
+        }
+
+        return info;
+    }
+
+    public static Info Numerical(NumericalOptions opts)
     {
         var info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
         var num = opts.start;
+        opts.zeros = Math.Max(opts.zeros, 0);
 
         for (var i = 0; i < info.NewDirsNames.Length; i++)
         {
             var numToString = num.ToString($"D{opts.zeros}");
             info.NewDirsNames[i] = numToString;
-            num++;
+            num += opts.increment;
         }
 
         for (var i = 0; i < info.NewFilesNames.Length; i++)
         {
             var numToString = num.ToString($"D{opts.zeros}");
             info.NewFilesNames[i] = numToString;
-            num++;
-        }
-
-        if (opts.newPath == "" && !opts.notSafe && fromCmd)
-        {
-            var newDirsNames = (string[])info.NewDirsNames.Clone(); var newFilesNames = (string[])info.NewFilesNames.Clone();
-            RenameMethods.Temp(opts.path, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info.NewDirsNames = newDirsNames;
-            info.NewFilesNames = newFilesNames;
+            num += opts.increment;
         }
 
         return info;
     }
 
-    public static Info Alphabetical(AlphabeticalOptions opts, bool fromCmd)
+    public static Info NumericalForPattern(NumericalOptionsForPattern opts)
+    {
+        var info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
+        var num = opts.start;
+        opts.zeros = Math.Max(opts.zeros, 0);
+
+        for (var i = 0; i < info.NewDirsNames.Length; i++)
+        {
+            var numToString = RenamerUtils.GenerateNumber(num, opts.start, opts.range, opts.every).ToString($"D{opts.zeros}");
+            info.NewDirsNames[i] = numToString;
+            num += opts.increment;
+        }
+
+        for (var i = 0; i < info.NewFilesNames.Length; i++)
+        {
+            var numToString = RenamerUtils.GenerateNumber(num, opts.start, opts.range, opts.every).ToString($"D{opts.zeros}");
+            info.NewFilesNames[i] = numToString;
+            num += opts.increment;
+        }
+
+        return info;
+    }
+
+    public static Info Alphabetical(AlphabeticalOptions opts)
     {
         var info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
         var index = RenamerUtils.ConvertStringToIndex(opts.start);
@@ -84,36 +104,20 @@ class RenamerInfo
             index++;
         }
 
-        if (opts.newPath == "" && !opts.notSafe && fromCmd)
-        {
-            var newDirsNames = (string[])info.NewDirsNames.Clone(); var newFilesNames = (string[])info.NewFilesNames.Clone();
-            RenameMethods.Temp(opts.path, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info.NewDirsNames = newDirsNames;
-            info.NewFilesNames = newFilesNames;
-        }
-
         return info;
     }
 
-    public static Info Reverse(ReverseOptions opts, bool fromCmd)
+    public static Info Reverse(ReverseOptions opts)
     {
         var info = RenamerUtils.PrepareRename(opts.path, false, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-        var revDirs = info.PrevDirsNames.Reverse().ToArray(); var revFiles = info.PrevFilesNames.Reverse().ToArray();
-
-        if (opts.newPath == "" && !opts.notSafe && fromCmd)
-        {
-            RenameMethods.Temp(opts.path, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info = RenamerUtils.PrepareRename(opts.path, false, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-        }
-
+        var revDirs = info.PrevDirsNames.Reverse().ToArray();
+        var revFiles = info.PrevFilesNames.Reverse().ToArray().Select(file => RenamerUtils.RemoveExtension(file)).ToArray();
         info.NewDirsNames = revDirs;
         info.NewFilesNames = revFiles;
-
         return info;
     }
 
-    public static Info Replace(ReplaceOptions opts, bool fromCmd)
+    public static Info Replace(ReplaceOptions opts)
     {
         var info = RenamerUtils.PrepareRename(opts.path, false, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
 
@@ -127,19 +131,10 @@ class RenamerInfo
             info.NewFilesNames[i] = RenamerUtils.RemoveExtension(info.PrevFilesNames[i]).Replace(opts.from, opts.to);
         }
 
-        if (opts.newPath == "" && !opts.notSafe && fromCmd)
-        {
-            var newDirsNames = (string[])info.NewDirsNames.Clone(); var newFilesNames = (string[])info.NewFilesNames.Clone();
-            RenameMethods.Temp(opts.path, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info.NewDirsNames = newDirsNames;
-            info.NewFilesNames = newFilesNames;
-        }
-
         return info;
     }
 
-    public static Info Upper(UpperOptions opts, bool fromCmd)
+    public static Info Upper(UpperOptions opts)
     {
         var info = RenamerUtils.PrepareRename(opts.path, false, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
 
@@ -153,19 +148,10 @@ class RenamerInfo
             info.NewFilesNames[i] = RenamerUtils.RemoveExtension(info.PrevFilesNames[i]).ToUpper();
         }
 
-        if (opts.newPath == "" && !opts.notSafe && fromCmd)
-        {
-            var newDirsNames = (string[])info.NewDirsNames.Clone(); var newFilesNames = (string[])info.NewFilesNames.Clone();
-            RenameMethods.Temp(opts.path, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info.NewDirsNames = newDirsNames;
-            info.NewFilesNames = newFilesNames;
-        }
-
         return info;
     }
 
-    public static Info Lower(LowerOptions opts, bool fromCmd)
+    public static Info Lower(LowerOptions opts)
     {
         var info = RenamerUtils.PrepareRename(opts.path, false, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
 
@@ -179,19 +165,10 @@ class RenamerInfo
             info.NewFilesNames[i] = RenamerUtils.RemoveExtension(info.PrevFilesNames[i]).ToLower();
         }
 
-        if (opts.newPath == "" && !opts.notSafe && fromCmd)
-        {
-            var newDirsNames = (string[])info.NewDirsNames.Clone(); var newFilesNames = (string[])info.NewFilesNames.Clone();
-            RenameMethods.Temp(opts.path, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info.NewDirsNames = newDirsNames;
-            info.NewFilesNames = newFilesNames;
-        }
-
         return info;
     }
 
-    public static Info Title(TitleOptions opts, bool fromCmd)
+    public static Info Title(TitleOptions opts)
     {
         var info = RenamerUtils.PrepareRename(opts.path, false, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
         TextInfo myTI = new CultureInfo("en-US", false).TextInfo;
@@ -206,19 +183,10 @@ class RenamerInfo
             info.NewFilesNames[i] = $"{myTI.ToTitleCase(RenamerUtils.RemoveExtension(info.PrevFilesNames[i]))}"; ;
         }
 
-        if (opts.newPath == "" && !opts.notSafe && fromCmd)
-        {
-            var newDirsNames = (string[])info.NewDirsNames.Clone(); var newFilesNames = (string[])info.NewFilesNames.Clone();
-            RenameMethods.Temp(opts.path, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info.NewDirsNames = newDirsNames;
-            info.NewFilesNames = newFilesNames;
-        }
-
         return info;
     }
 
-    public static Info Pattern(PatternOptions opts, bool fromCmd)
+    public static Info Pattern(PatternOptions opts)
     {
         var info = RenamerUtils.PrepareRename(opts.path, false, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
 
@@ -255,7 +223,7 @@ class RenamerInfo
                     dirsNamesParts.Add(regexResult[0]);
                     filesNamesParts.Add(regexResult[1]);
                 }
-                else
+                else if (cmd.StartsWith("% "))
                 {
                     // normal text
                     var regexResult = RenamerUtils.HandlePatternText(cmd, info.PrevDirsNames, info.PrevFilesNames);
@@ -283,15 +251,6 @@ class RenamerInfo
                 }
                 info.NewFilesNames[i] = (newFileName != "") ? newFileName : info.PrevFilesNames[i];
             }
-        }
-
-        if (opts.newPath == "" && !opts.notSafe && fromCmd)
-        {
-            var newDirsNames = (string[])info.NewDirsNames.Clone(); var newFilesNames = (string[])info.NewFilesNames.Clone();
-            RenameMethods.Temp(opts.path, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
-            info.NewDirsNames = newDirsNames;
-            info.NewFilesNames = newFilesNames;
         }
 
         return info;

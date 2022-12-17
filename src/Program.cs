@@ -1,4 +1,5 @@
 ﻿
+using System.Diagnostics;
 using CommandLine;
 namespace Renamer;
 
@@ -6,7 +7,9 @@ class Program
 {
     static int Main(string[] args)
     {
-        return CommandLine.Parser.Default.ParseArguments<
+        Stopwatch st = new();
+        st.Start();
+        var result = CommandLine.Parser.Default.ParseArguments<
                 RandomOptions,
                 NumericalOptions,
                 AlphabeticalOptions,
@@ -27,6 +30,9 @@ class Program
                 (TitleOptions opts) => RenameMethods.Title(opts),
                 (PatternOptions opts) => RenameMethods.Pattern(opts),
                 errs => 1);
+        st.Stop();
+        if (result == 0) Console.WriteLine($"Operation Completed. Took {st.ElapsedMilliseconds / 1000.0} second(s)");
+        return result;
     }
 
 }

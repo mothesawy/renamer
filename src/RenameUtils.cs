@@ -84,13 +84,77 @@ class RenamerUtils
         return index;
     }
 
+    public static string GenerateUUID(int length)
+    {
+        var uuid = "";
+        var len = Math.Min(Math.Max(length, 12), 32);
+        uuid = Guid.NewGuid().ToString().Replace("-", "").Substring(0, len);
+        return uuid;
+    }
+
+    public static int GenerateNumber(int num, int start, IEnumerable<int>? optsRange, int every)
+    {
+        if (optsRange is not null)
+        {
+            var rng = optsRange.ToArray();
+            if (rng.Length == 0 && every == 0) return num;
+            if (rng.Length != 0 && every != 0)
+            {
+                System.Console.WriteLine(rng.ToArray().Length);
+                Console.WriteLine("ERROR: You can't use both 'range' and 'every'.");
+                Environment.Exit(1);
+            }
+            if (rng.Length != 0 && every == 0)
+            {
+                int[] range;
+                if (rng.Length != 2)
+                {
+                    Console.WriteLine("ERROR: Range must be between 2 positive integer values.");
+                    Environment.Exit(1);
+                }
+                var rangeStart = Math.Abs(rng[0]);
+                var rangeEnd = Math.Abs(rng[1]);
+                range = new int[Math.Abs(rangeEnd - rangeStart) + 1];
+
+                if (rangeStart == rangeEnd)
+                {
+                    Console.WriteLine("ERROR: Range start and end must be different.");
+                    Environment.Exit(1);
+                }
+                else
+                {
+                    var accum = Math.Min(rangeStart, rangeEnd);
+                    for (var i = 0; i < range.Length; i++)
+                    {
+                        range[i] = accum + i;
+                    }
+                    if (rangeStart > rangeEnd) range = range.Reverse().ToArray();
+                    if (!range.Contains(start))
+                    {
+                        Console.WriteLine("ERROR: Start value must be within range.");
+                        Environment.Exit(1);
+                    }
+                }
+
+                return range[(num - start) % range.Length];
+            }
+            else if (rng.Length == 0 && every != 0)
+            {
+                every = Math.Abs(every);
+                if (every == 1) return num;
+                return start + ((num - start) / every);
+            }
+        }
+        return num;
+    }
+
     // ---------------------------------------------------------------------------------------------------------
 
     public static void CopyDirectory(string src, string dist)
     {
         var srcDirInfo = new DirectoryInfo(src);
         if (!srcDirInfo.Exists)
-            throw new DirectoryNotFoundException($"Source directory not found: {srcDirInfo.FullName}");
+            throw new DirectoryNotFoundException($"ERROR: Source directory not found: {srcDirInfo.FullName}");
 
         DirectoryInfo[] dirs = srcDirInfo.GetDirectories();
         Directory.CreateDirectory(dist);
@@ -129,6 +193,20 @@ class RenamerUtils
             }
             return dist;
         }
+    }
+
+    public static Info CheckSafety(string path, string newPath, Info info, bool notSafe, bool reverse, bool ignoreDirs, bool ignoreFiles, bool ignoreDotDirs, bool ignoreDotFiles)
+    {
+        if (newPath == "" && !notSafe)
+        {
+            var newDirsNames = (string[])info.NewDirsNames.Clone(); var newFilesNames = (string[])info.NewFilesNames.Clone();
+            RenameMethods.Temp(path, ignoreDirs, ignoreFiles, ignoreDotDirs, ignoreDotFiles);
+            info = RenamerUtils.PrepareRename(path, reverse, ignoreDirs, ignoreFiles, ignoreDotDirs, ignoreDotFiles);
+            info.NewDirsNames = newDirsNames;
+            info.NewFilesNames = newFilesNames;
+            return info;
+        }
+        return info;
     }
 
     public static string GetExtension(string fileName)
@@ -176,9 +254,9 @@ class RenamerUtils
             {
                 index = Int32.Parse(nextCmd.Substring(3));
             }
-            catch
+            catch (System.FormatException)
             {
-                Console.WriteLine("Invalid group index");
+                Console.WriteLine("ERROR: Invalid group index");
             }
         }
 
@@ -227,21 +305,21 @@ class RenamerUtils
         var renameCmd = cmd.Substring(2) + $" -p {path}";
 
         var partialInfo = CommandLine.Parser.Default.ParseArguments<
-            RandomOptions,
-            NumericalOptions,
+            RandomOptionsForPattern,
+            NumericalOptionsForPattern,
             AlphabeticalOptions,
             ReverseOptions,
             ReplaceOptions,
             UpperOptions,
             LowerOptions>(renameCmd.Split(" "))
         .MapResult(
-            (RandomOptions opts) => RenamerInfo.Random(opts, false),
-            (NumericalOptions opts) => RenamerInfo.Numerical(opts, false),
-            (AlphabeticalOptions opts) => RenamerInfo.Alphabetical(opts, false),
-            (ReverseOptions opts) => RenamerInfo.Reverse(opts, false),
-            (ReplaceOptions opts) => RenamerInfo.Replace(opts, false),
-            (UpperOptions opts) => RenamerInfo.Upper(opts, false),
-            (LowerOptions opts) => RenamerInfo.Lower(opts, false),
+            (RandomOptionsForPattern opts) => RenamerInfo.RandomForPattern(opts),
+            (NumericalOptionsForPattern opts) => RenamerInfo.NumericalForPattern(opts),
+            (AlphabeticalOptions opts) => RenamerInfo.Alphabetical(opts),
+            (ReverseOptions opts) => RenamerInfo.Reverse(opts),
+            (ReplaceOptions opts) => RenamerInfo.Replace(opts),
+            (UpperOptions opts) => RenamerInfo.Upper(opts),
+            (LowerOptions opts) => RenamerInfo.Lower(opts),
             errs => new Info(new DirectoryInfo[prevDirsNames.Length], new FileInfo[prevFilesNames.Length]));
 
         return new string[][] { partialInfo.NewDirsNames, partialInfo.NewFilesNames };
@@ -249,23 +327,24 @@ class RenamerUtils
 
     public static string[][] HandlePatternText(string cmd, string[] prevDirsNames, string[] prevFilesNames)
     {
+        var renameText = cmd.Substring(2);
         var dirsNames = new string[prevDirsNames.Length];
         var filesNames = new string[prevFilesNames.Length];
 
         for (var i = 0; i < dirsNames.Length; i++)
         {
-            dirsNames[i] = cmd;
+            dirsNames[i] = renameText;
         }
 
         for (var i = 0; i < filesNames.Length; i++)
         {
-            filesNames[i] = cmd;
+            filesNames[i] = renameText;
         }
         return new string[][] { dirsNames, filesNames };
     }
 
     // ---------------------------------------------------------------------------------------------------------
-    static void RenameDir(string path, string newPath, string src, string distBase, string prefix, string suffix)
+    static void RenameDir(string path, string newPath, string src, string distBase, string prefix, string suffix, int n)
     {
         var dist = "";
         var dot = "";
@@ -276,20 +355,32 @@ class RenamerUtils
         prefix = RemoveDisallowedCharacters(prefix);
         suffix = RemoveDisallowedCharacters(suffix);
 
-        dist = $"{dot}{prefix}{distBase}{suffix}";
-
+        dist = (n == 0) ? $"{dot}{prefix}{distBase}{suffix}" : $"{dot}{prefix}{distBase}{suffix} ({n})";
         if (newPath != "")
         {
-            dist = CheckExisting(newPath, dist, $"{dot}{prefix}", distBase, $"{suffix}");
-            CopyDirectory(Path.Combine(path, src), Path.Combine(newPath, dist));
+            try
+            {
+                CopyDirectory(Path.Combine(path, src), Path.Combine(newPath, dist));
+            }
+            catch (System.IO.IOException)
+            {
+                RenameDir(path, newPath, src, distBase, prefix, suffix, n + 1);
+            }
         }
         else
         {
-            Directory.Move(Path.Combine(path, src), Path.Combine(path, dist));
+            try
+            {
+                Directory.Move(Path.Combine(path, src), Path.Combine(path, dist));
+            }
+            catch (System.IO.IOException)
+            {
+                RenameDir(path, newPath, src, distBase, prefix, suffix, n + 1);
+            }
         }
     }
 
-    static void RenameFile(string path, string newPath, string src, string distBase, string prefix, string suffix)
+    static void RenameFile(string path, string newPath, string src, string distBase, string prefix, string suffix, int n)
     {
         var dist = "";
         var dot = "";
@@ -301,29 +392,46 @@ class RenamerUtils
         prefix = RemoveDisallowedCharacters(prefix);
         suffix = RemoveDisallowedCharacters(suffix);
 
-        dist = $"{dot}{prefix}{distBase}{suffix}.{ext}";
-
+        dist = (n == 0) ? $"{dot}{prefix}{distBase}{suffix}.{ext}" : $"{dot}{prefix}{distBase}{suffix} ({n}).{ext}";
         if (newPath != "")
         {
-            dist = CheckExisting(newPath, dist, $"{dot}{prefix}", distBase, $"{suffix}.{ext}");
-            File.Copy(Path.Combine(path, (string)src), Path.Combine(newPath, dist));
+            try
+            {
+                File.Copy(Path.Combine(path, (string)src), Path.Combine(newPath, dist));
+            }
+            catch (System.IO.IOException)
+            {
+                RenameFile(path, newPath, src, distBase, prefix, suffix, n + 1);
+            }
         }
         else
         {
-            File.Move(Path.Combine(path, (string)src), Path.Combine(path, dist));
+            try
+            {
+                File.Move(Path.Combine(path, (string)src), Path.Combine(path, dist));
+            }
+            catch (System.IO.IOException)
+            {
+                RenameFile(path, newPath, src, distBase, prefix, suffix, n + 1);
+            }
         }
     }
 
     public static void Rename(string path, string newPath, string[] prevDirsNames, string[] prevFilesNames, string[] newDirsNames, string[] newFilesNames, string prefix, string suffix)
     {
+        if (path == newPath)
+        {
+            Console.WriteLine("ERROR: path and new-path must be different");
+            Environment.Exit(1);
+        }
         for (var i = 0; i < newDirsNames.Length; i++)
         {
-            RenameDir(path, newPath, prevDirsNames[i], newDirsNames[i], prefix, suffix);
+            RenameDir(path, newPath, prevDirsNames[i], newDirsNames[i], prefix, suffix, 0);
         }
 
         for (var i = 0; i < newFilesNames.Length; i++)
         {
-            RenameFile(path, newPath, prevFilesNames[i], newFilesNames[i], prefix, suffix);
+            RenameFile(path, newPath, prevFilesNames[i], newFilesNames[i], prefix, suffix, 0);
         }
     }
 }
