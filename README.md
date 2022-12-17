@@ -1,7 +1,6 @@
 # **Renamer**
 
-A tool to bulk-rename multiple files and directories with different methods, written in C#!
-You can use different renaming methods.
+A tool to batch rename multiple files and directories with different renaming methods, written in C#!
 
 Run `renamer --help` for more info.
 
