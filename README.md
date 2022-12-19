@@ -84,9 +84,9 @@ Rename items randomly using UUID V4.
 
     - `--ignore-dirs`            (Default: false) Exclude directories from renaming.
 
-    - `--ignore-hidden-files`    (Default: false) Exclude files from renaming.
+    - `--ignore-dot-files`       (Default: false) Exclude files from renaming.
 
-    - `--ignore-hidden-dirs`     (Default: false) Exclude directories that starts with '.' from renaming.
+    - `--ignore-dot-dirs`        (Default: false) Exclude directories that starts with '.' from renaming.
 
     - `--ignore-files`           (Default: false) Exclude files that starts with '.' from renaming.
 
@@ -130,9 +130,9 @@ Numerical renaming for items (start, start + 1, start + 2, ...).
 
     - `--ignore-dirs`            (Default: false) Exclude directories from renaming.
 
-    - `--ignore-hidden-files`    (Default: false) Exclude files from renaming.
+    - `--ignore-dot-files`       (Default: false) Exclude files from renaming.
 
-    - `--ignore-hidden-dirs`     (Default: false) Exclude directories that starts with '.' from renaming.
+    - `--ignore-dot-dirs`        (Default: false) Exclude directories that starts with '.' from renaming.
 
     - `--ignore-files`           (Default: false) Exclude files that starts with '.' from renaming.
 
@@ -146,7 +146,7 @@ Numerical renaming for items (start, start + 1, start + 2, ...).
 
     - Rename items numerically to a new path with padding-zeros = 2 and ignore files sttarting with ".":
 
-    `renamer numerical -p "." --new-path "../new folder" --zeros 2 --ignore-hidden-dirs`
+    `renamer numerical -p "." --new-path "../new folder" --zeros 2 --ignore-dot-dirs`
 
 
 >**alphabetical**
@@ -174,9 +174,9 @@ Alphabetical renaming for items (a, b, c, ..., z, za, zb, ...).
 
     - `--ignore-dirs`            (Default: false) Exclude directories from renaming.
 
-    - `--ignore-hidden-files`    (Default: false) Exclude files from renaming.
+    - `--ignore-dot-files`       (Default: false) Exclude files from renaming.
 
-    - `--ignore-hidden-dirs`     (Default: false) Exclude directories that starts with '.' from renaming.
+    - `--ignore-dot-dirs`        (Default: false) Exclude directories that starts with '.' from renaming.
 
     - `--ignore-files`           (Default: false) Exclude files that starts with '.' from renaming.
 
@@ -213,9 +213,9 @@ Reverse the order of the items.
 
     - `--ignore-dirs`            (Default: false) Exclude directories from renaming.
 
-    - `--ignore-hidden-files`    (Default: false) Exclude files from renaming.
+    - `--ignore-dot-files`       (Default: false) Exclude files from renaming.
 
-    - `--ignore-hidden-dirs`     (Default: false) Exclude directories that starts with '.' from renaming.
+    - `--ignore-dot-dirs`        (Default: false) Exclude directories that starts with '.' from renaming.
 
     - `--ignore-files`           (Default: false) Exclude files that starts with '.' from renaming.
 
@@ -257,9 +257,9 @@ Replace part of text in items names with another text.
 
     - `--ignore-dirs`            (Default: false) Exclude directories from renaming.
 
-    - `--ignore-hidden-files`    (Default: false) Exclude files from renaming.
+    - `--ignore-dot-files`       (Default: false) Exclude files from renaming.
 
-    - `--ignore-hidden-dirs`     (Default: false) Exclude directories that starts with '.' from renaming.
+    - `--ignore-dot-dirs`        (Default: false) Exclude directories that starts with '.' from renaming.
 
     - `--ignore-files`           (Default: false) Exclude files that starts with '.' from renaming.
 
@@ -302,9 +302,9 @@ Convert names to upper case.
 
     - `--ignore-dirs`            (Default: false) Exclude directories from renaming.
 
-    - `--ignore-hidden-files`    (Default: false) Exclude files from renaming.
+    - `--ignore-dot-files`       (Default: false) Exclude files from renaming.
 
-    - `--ignore-hidden-dirs`     (Default: false) Exclude directories that starts with '.' from renaming.
+    - `--ignore-dot-dirs`        (Default: false) Exclude directories that starts with '.' from renaming.
 
     - `--ignore-files`           (Default: false) Exclude files that starts with '.' from renaming.
 
@@ -343,9 +343,9 @@ Convert names to lower case.
 
     - `--ignore-dirs`            (Default: false) Exclude directories from renaming.
 
-    - `--ignore-hidden-files`    (Default: false) Exclude files from renaming.
+    - `--ignore-dot-files`       (Default: false) Exclude files from renaming.
 
-    - `--ignore-hidden-dirs`     (Default: false) Exclude directories that starts with '.' from renaming.
+    - `--ignore-dot-dirs`        (Default: false) Exclude directories that starts with '.' from renaming.
 
     - `--ignore-files`           (Default: false) Exclude files that starts with '.' from renaming.
 
@@ -384,9 +384,9 @@ Convert names to title case.
 
     - `--ignore-dirs`            (Default: false) Exclude directories from renaming.
 
-    - `--ignore-hidden-files`    (Default: false) Exclude files from renaming.
+    - `--ignore-dot-files`       (Default: false) Exclude files from renaming.
 
-    - `--ignore-hidden-dirs`     (Default: false) Exclude directories that starts with '.' from renaming.
+    - `--ignore-dot-dirs`        (Default: false) Exclude directories that starts with '.' from renaming.
 
     - `--ignore-files`           (Default: false) Exclude files that starts with '.' from renaming.
 
@@ -427,9 +427,9 @@ Perform renaming with a pattern of text for items' names.
 
     - `--ignore-dirs`            (Default: false) Exclude directories from renaming.
 
-    - `--ignore-hidden-files`    (Default: false) Exclude files from renaming.
+    - `--ignore-dot-files`       (Default: false) Exclude files from renaming.
 
-    - `--ignore-hidden-dirs`     (Default: false) Exclude directories that starts with '.' from renaming.
+    - `--ignore-dot-dirs`        (Default: false) Exclude directories that starts with '.' from renaming.
 
     - `--ignore-files`           (Default: false) Exclude files that starts with '.' from renaming.
 
@@ -443,7 +443,14 @@ Perform renaming with a pattern of text for items' names.
 
     - Command: same as the above commands but don't use (`-p`, `--path`) flags.
 
-    - Available commands: random, numerical (with range and every features), alphabetical, reverse, replace, upper, lower, title.
+    - Available commands:
+        - `alphabetical`, `reverse`, `replace`, `upper`, `lower`, `title`. But `random` and `numerical` have more features
+        - `random`:
+            - `c`, `--consistent`: for a consistent random name for all items.
+            - `l`, `length`: for random name length (min: 12, max: 32)
+        - `numerical`:
+            - `--range`: A range to repeat the numbers within.
+            - `--every`: Increace The number every nth iteration.
 
     - EX1: 
         - New names: "SE01-EP01", "SE01-EP02", ..., "SE01-EP013", "SE02-EP01", ...:
@@ -464,7 +471,13 @@ Perform renaming with a pattern of text for items' names.
 
         `renamer patern -p "path/to/your/files" --pattern "$ alphabetical -s a" "% -" "$ random -l 14"`
 
-    - EX3:
+    - EX7:
+        - New names: "a-55e6112456a34e", "b-55e6112456a34e", "c-55e6112456a34e", ...
+        - The Command:
+
+        `renamer patern -p "path/to/your/files" --pattern "$ alphabetical -s a" "% -" "$ random -l 14 -c"`
+
+    - EX5:
         - Old names: "songname.mp3", "songname.mp3", ...
         - New names: "albumname - songname - 01.mp3", "albumname - songname - 02.mp3", "albumname - songname - 03.mp3", ...
         - The Command:

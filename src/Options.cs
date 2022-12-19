@@ -8,7 +8,7 @@ namespace Renamer;
 // TODO: Audio files tags
 // TODO: Video files tags
 
-class BaseOptions
+class BaseOptions : IBaseOptions
 {
     [Option('p', "path", Required = true, HelpText = "Path of the files to rename.")]
     public string path { get; set; } = default!;
@@ -28,20 +28,30 @@ class BaseOptions
     [Option("ignore-dirs", Default = false, Required = false, HelpText = "Exclude directories from renaming.")]
     public bool ignoreDirs { get; set; }
 
-    [Option("ignore-hidden-files", Default = false, Required = false, HelpText = "Exclude files from renaming.")]
+    [Option("ignore-files", Default = false, Required = false, HelpText = "Exclude files that starts with '.' from renaming.")]
     public bool ignoreFiles { get; set; }
 
-    [Option("ignore-hidden-dirs", Default = false, Required = false, HelpText = "Exclude directories that starts with '.' from renaming.")]
+    [Option("ignore-dot-dirs", Default = false, Required = false, HelpText = "Exclude directories that starts with '.' from renaming.")]
     public bool ignoreDotDirs { get; set; }
 
-    [Option("ignore-files", Default = false, Required = false, HelpText = "Exclude files that starts with '.' from renaming.")]
+    [Option("ignore-dot-files", Default = false, Required = false, HelpText = "Exclude files from renaming.")]
     public bool ignoreDotFiles { get; set; }
+
+    public virtual BaseOptsObj GetBaseOptions()
+    {
+        return new BaseOptsObj(path, newPath, false, notSafe, ignoreDirs, ignoreFiles, ignoreDotDirs, ignoreDotFiles, prefix, suffix);
+    }
 }
 
-class BaseOptionsWithReverse : BaseOptions
+class BaseOptionsWithReverse : BaseOptions, IBaseOptions
 {
     [Option('r', "reverse", Default = false, Required = false, HelpText = "Reverse the order of files.")]
     public bool reverse { get; set; }
+
+    public override BaseOptsObj GetBaseOptions()
+    {
+        return new BaseOptsObj(path, newPath, reverse, notSafe, ignoreDirs, ignoreFiles, ignoreDotDirs, ignoreDotFiles, prefix, suffix);
+    }
 }
 
 [Verb("random", HelpText = "Rename items randomly using UUID V4.")]
@@ -52,8 +62,11 @@ class RandomOptions : BaseOptionsWithReverse
 [Verb("random", HelpText = "Rename items randomly using UUID V4.")]
 class RandomOptionsForPattern : RandomOptions
 {
-    [Option('l', "length", Default = 32, Required = false, HelpText = "Length of the random name (min: 12, max: 32). (With pattern mode only)")]
+    [Option('l', "length", Default = 32, Required = false, HelpText = "Length of the random name (min: 12, max: 32)")]
     public int length { get; set; }
+
+    [Option('c', "consistent", Default = false, Required = false, HelpText = "Exclude files from renaming.")]
+    public bool consistent { get; set; }
 }
 
 [Verb("numerical", HelpText = "Numerical renaming for items (start, start + 1, start + 2, ...).")]
@@ -72,10 +85,10 @@ class NumericalOptions : BaseOptionsWithReverse
 [Verb("numerical", HelpText = "Numerical renaming for items (start, start + 1, start + 2, ...).")]
 class NumericalOptionsForPattern : NumericalOptions
 {
-    [Option("range", Required = false, HelpText = "A range to repeat the numbers within")]
+    [Option("range", Required = false, HelpText = "A range to repeat the numbers within.")]
     public IEnumerable<int>? range { get; set; }
 
-    [Option("every", Default = 0, Required = false, HelpText = "Increace The number every nth iteration. (With pattern mode only)")]
+    [Option("every", Default = 0, Required = false, HelpText = "Increace The number every nth iteration.")]
     public int every { get; set; }
 }
 
@@ -124,4 +137,42 @@ class PatternOptions : BaseOptionsWithReverse
 {
     [Option("pattern", Required = true, HelpText = "A patern to apply while renaming.")]
     public IEnumerable<string>? pattern { get; set; }
+}
+
+public interface IBaseOptions
+{
+    BaseOptsObj GetBaseOptions();
+}
+
+public class BaseOptsObj
+{
+    public string path { get; set; }
+    public string newPath { get; set; }
+    public bool reverse { get; set; }
+    public bool notSafe { get; set; }
+    public bool ignoreDirs { get; set; }
+    public bool ignoreFiles { get; set; }
+    public bool ignoreDotDirs { get; set; }
+    public bool ignoreDotFiles { get; set; }
+    public string prefix { get; set; }
+    public string suffix { get; set; }
+
+    public BaseOptsObj(string path, string newPath, bool reverse, bool notSafe, bool ignoreDirs, bool ignoreFiles, bool ignoreDotDirs, bool ignoreDotFiles, string prefix, string suffix)
+    {
+        this.path = path;
+        this.newPath = newPath;
+        this.reverse = reverse;
+        this.notSafe = notSafe;
+        this.ignoreDirs = ignoreDirs;
+        this.ignoreFiles = ignoreFiles;
+        this.ignoreDotDirs = ignoreDotDirs;
+        this.ignoreDotFiles = ignoreDotFiles;
+        this.prefix = prefix;
+        this.suffix = suffix;
+    }
+
+    public BaseOptsObj cloneForTempRename()
+    {
+        return new BaseOptsObj(path, "", false, notSafe, ignoreDirs, ignoreFiles, ignoreDotDirs, ignoreDotFiles, prefix, suffix);
+    }
 }

@@ -7,22 +7,22 @@ namespace Renamer.RenameUtils;
 
 class RenamerUtils
 {
-    public static Info PrepareRename(string path, bool reverse, bool ignoreDirs, bool ignoreFiles, bool ignoreDotDirs, bool ignoreDotFiles)
+    public static Info PrepareRename(BaseOptsObj baseOpts)
     {
-        var srcInfo = new DirectoryInfo(path);
+        var srcInfo = new DirectoryInfo(baseOpts.path);
         var dirs = srcInfo.GetDirectories();
         var files = srcInfo.GetFiles();
 
-        if (ignoreDirs) dirs = new DirectoryInfo[0];
-        if (ignoreFiles) files = new FileInfo[0];
+        if (baseOpts.ignoreDirs) dirs = new DirectoryInfo[0];
+        if (baseOpts.ignoreFiles) files = new FileInfo[0];
 
-        if (ignoreDotDirs) dirs = Array.FindAll(dirs, dir => !dir.Name.StartsWith("."));
-        if (ignoreDotFiles) files = Array.FindAll(files, file => !file.Name.StartsWith("."));
+        if (baseOpts.ignoreDotDirs) dirs = Array.FindAll(dirs, dir => !dir.Name.StartsWith("."));
+        if (baseOpts.ignoreDotFiles) files = Array.FindAll(files, file => !file.Name.StartsWith("."));
 
         dirs = dirs.OrderBy(d => d, new OrderDirsByName()).ToArray();
         files = files.OrderBy(f => f, new OrderFilesByName()).ToArray();
 
-        if (reverse)
+        if (baseOpts.reverse)
         {
             files = files.Reverse().ToArray();
             dirs = dirs.Reverse().ToArray();
@@ -195,13 +195,13 @@ class RenamerUtils
         }
     }
 
-    public static Info CheckSafety(string path, string newPath, Info info, bool notSafe, bool reverse, bool ignoreDirs, bool ignoreFiles, bool ignoreDotDirs, bool ignoreDotFiles)
+    public static Info CheckSafety(BaseOptsObj baseOpts, Info info)
     {
-        if (newPath == "" && !notSafe)
+        if (baseOpts.newPath == "" && !baseOpts.notSafe)
         {
             var newDirsNames = (string[])info.NewDirsNames.Clone(); var newFilesNames = (string[])info.NewFilesNames.Clone();
-            RenameMethods.Temp(path, ignoreDirs, ignoreFiles, ignoreDotDirs, ignoreDotFiles);
-            info = RenamerUtils.PrepareRename(path, reverse, ignoreDirs, ignoreFiles, ignoreDotDirs, ignoreDotFiles);
+            RenameMethods.Temp(baseOpts.cloneForTempRename());
+            info = RenamerUtils.PrepareRename(baseOpts);
             info.NewDirsNames = newDirsNames;
             info.NewFilesNames = newFilesNames;
             return info;
@@ -417,21 +417,21 @@ class RenamerUtils
         }
     }
 
-    public static void Rename(string path, string newPath, string[] prevDirsNames, string[] prevFilesNames, string[] newDirsNames, string[] newFilesNames, string prefix, string suffix)
+    public static void Rename(BaseOptsObj baseOpts, Info info)
     {
-        if (path == newPath)
+        if (baseOpts.path == baseOpts.newPath)
         {
             Console.WriteLine("ERROR: path and new-path must be different");
             Environment.Exit(1);
         }
-        for (var i = 0; i < newDirsNames.Length; i++)
+        for (var i = 0; i < info.NewDirsNames.Length; i++)
         {
-            RenameDir(path, newPath, prevDirsNames[i], newDirsNames[i], prefix, suffix, 0);
+            RenameDir(baseOpts.path, baseOpts.newPath, info.PrevDirsNames[i], info.NewDirsNames[i], baseOpts.prefix, baseOpts.suffix, 0);
         }
 
-        for (var i = 0; i < newFilesNames.Length; i++)
+        for (var i = 0; i < info.NewFilesNames.Length; i++)
         {
-            RenameFile(path, newPath, prevFilesNames[i], newFilesNames[i], prefix, suffix, 0);
+            RenameFile(baseOpts.path, baseOpts.newPath, info.PrevFilesNames[i], info.NewFilesNames[i], baseOpts.prefix, baseOpts.suffix, 0);
         }
     }
 }

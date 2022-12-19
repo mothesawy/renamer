@@ -7,7 +7,7 @@ class RenamerInfo
 {
     public static Info Random(RandomOptions opts)
     {
-        var info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
+        var info = RenamerUtils.PrepareRename(opts.GetBaseOptions());
 
         for (var i = 0; i < info.NewDirsNames.Length; i++)
         {
@@ -24,16 +24,32 @@ class RenamerInfo
 
     public static Info RandomForPattern(RandomOptionsForPattern opts)
     {
-        var info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
+        var info = RenamerUtils.PrepareRename(opts.GetBaseOptions());
 
-        for (var i = 0; i < info.NewDirsNames.Length; i++)
+        if (opts.consistent)
         {
-            info.NewDirsNames[i] = RenamerUtils.GenerateUUID(opts.length);
+            var uuid = RenamerUtils.GenerateUUID(opts.length);
+            for (var i = 0; i < info.NewDirsNames.Length; i++)
+            {
+                info.NewDirsNames[i] = uuid;
+            }
+
+            for (var i = 0; i < info.NewFilesNames.Length; i++)
+            {
+                info.NewFilesNames[i] = uuid;
+            }
         }
-
-        for (var i = 0; i < info.NewFilesNames.Length; i++)
+        else
         {
-            info.NewFilesNames[i] = RenamerUtils.GenerateUUID(opts.length);
+            for (var i = 0; i < info.NewDirsNames.Length; i++)
+            {
+                info.NewDirsNames[i] = RenamerUtils.GenerateUUID(opts.length);
+            }
+
+            for (var i = 0; i < info.NewFilesNames.Length; i++)
+            {
+                info.NewFilesNames[i] = RenamerUtils.GenerateUUID(opts.length);
+            }
         }
 
         return info;
@@ -41,7 +57,7 @@ class RenamerInfo
 
     public static Info Numerical(NumericalOptions opts)
     {
-        var info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
+        var info = RenamerUtils.PrepareRename(opts.GetBaseOptions());
         var num = opts.start;
         opts.zeros = Math.Max(opts.zeros, 0);
 
@@ -64,7 +80,7 @@ class RenamerInfo
 
     public static Info NumericalForPattern(NumericalOptionsForPattern opts)
     {
-        var info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
+        var info = RenamerUtils.PrepareRename(opts.GetBaseOptions());
         var num = opts.start;
         opts.zeros = Math.Max(opts.zeros, 0);
 
@@ -87,7 +103,7 @@ class RenamerInfo
 
     public static Info Alphabetical(AlphabeticalOptions opts)
     {
-        var info = RenamerUtils.PrepareRename(opts.path, opts.reverse, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
+        var info = RenamerUtils.PrepareRename(opts.GetBaseOptions());
         var index = RenamerUtils.ConvertStringToIndex(opts.start);
 
         for (var i = 0; i < info.NewDirsNames.Length; i++)
@@ -109,7 +125,7 @@ class RenamerInfo
 
     public static Info Reverse(ReverseOptions opts)
     {
-        var info = RenamerUtils.PrepareRename(opts.path, false, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
+        var info = RenamerUtils.PrepareRename(opts.GetBaseOptions());
         var revDirs = info.PrevDirsNames.Reverse().ToArray();
         var revFiles = info.PrevFilesNames.Reverse().ToArray().Select(file => RenamerUtils.RemoveExtension(file)).ToArray();
         info.NewDirsNames = revDirs;
@@ -119,7 +135,7 @@ class RenamerInfo
 
     public static Info Replace(ReplaceOptions opts)
     {
-        var info = RenamerUtils.PrepareRename(opts.path, false, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
+        var info = RenamerUtils.PrepareRename(opts.GetBaseOptions());
 
         for (var i = 0; i < info.NewDirsNames.Length; i++)
         {
@@ -136,7 +152,7 @@ class RenamerInfo
 
     public static Info Upper(UpperOptions opts)
     {
-        var info = RenamerUtils.PrepareRename(opts.path, false, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
+        var info = RenamerUtils.PrepareRename(opts.GetBaseOptions());
 
         for (var i = 0; i < info.NewDirsNames.Length; i++)
         {
@@ -153,7 +169,7 @@ class RenamerInfo
 
     public static Info Lower(LowerOptions opts)
     {
-        var info = RenamerUtils.PrepareRename(opts.path, false, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
+        var info = RenamerUtils.PrepareRename(opts.GetBaseOptions());
 
         for (var i = 0; i < info.NewDirsNames.Length; i++)
         {
@@ -170,7 +186,7 @@ class RenamerInfo
 
     public static Info Title(TitleOptions opts)
     {
-        var info = RenamerUtils.PrepareRename(opts.path, false, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
+        var info = RenamerUtils.PrepareRename(opts.GetBaseOptions());
         TextInfo myTI = new CultureInfo("en-US", false).TextInfo;
 
         for (var i = 0; i < info.NewDirsNames.Length; i++)
@@ -188,7 +204,7 @@ class RenamerInfo
 
     public static Info Pattern(PatternOptions opts)
     {
-        var info = RenamerUtils.PrepareRename(opts.path, false, opts.ignoreDirs, opts.ignoreFiles, opts.ignoreDotDirs, opts.ignoreDotFiles);
+        var info = RenamerUtils.PrepareRename(opts.GetBaseOptions());
 
         var dirsNamesParts = new List<string[]?>();
         var filesNamesParts = new List<string[]?>();
