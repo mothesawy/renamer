@@ -471,7 +471,7 @@ Perform renaming with a pattern of text for items' names.
 
         `renamer patern -p "path/to/your/files" --pattern "$ alphabetical -s a" "% -" "$ random -l 14"`
 
-    - EX7:
+    - EX4:
         - New names: "a-55e6112456a34e", "b-55e6112456a34e", "c-55e6112456a34e", ...
         - The Command:
 
