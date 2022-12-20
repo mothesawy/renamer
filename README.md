@@ -5,7 +5,7 @@ A tool to batch rename multiple files and directories with different renaming me
 ## features:
 
 - This tool can use both relative paths and absolute paths.
-- supports both Windows and Unix path seperators ("/", "\\").
+- supports both Windows and Unix path separators ("/", "\\").
 - Bulk rename files in place or copy to another path.
 - Random renaming mode using uuidv4.
 - Ordered numerical renaming.
