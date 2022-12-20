@@ -2,8 +2,6 @@
 
 A tool to batch rename multiple files and directories with different renaming methods, written in C#!
 
-Run `renamer --help` for more info.
-
 ## features:
 
 - This tool can use both relative paths and absolute paths.
@@ -28,6 +26,7 @@ Run `renamer --help` for more info.
 - Download binaries from _Releases_ page or clone and build it yourself.
 - You can add the binary to your path to run it from anywhere.
 - This tool __does not__ require _.net core_ to be installed. It's self contained.
+- Run `renamer --help` for more info.
 
 ## Usage:
 
