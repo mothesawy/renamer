@@ -485,7 +485,7 @@ Perform renaming with a pattern of text for items' names.
 
 
 ## TODO:
-- [ ] Code refactoring and performance improvements
+- [ ] Code and architecture refactoring and performance improvements
 - [ ] Recursive renaming
 - [ ] Preview before renaming
 - [ ] Rename by file type and classify files by file type.
