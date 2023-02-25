@@ -1,104 +1,114 @@
 
-using Renamer.RenameUtils;
-using Renamer.RenameInfo;
-
 namespace Renamer;
-
-class RenameMethods
+class Renamer
 {
-    public static int Random(RandomOptions opts)
+    public static Info ApplySafety(Info info)
     {
-        var info = RenamerInfo.Random(opts);
-        info = RenamerUtils.CheckSafety(opts.GetBaseOptions(), info);
-        RenamerUtils.Rename(opts.GetBaseOptions(), info);
-        return 0;
-    }
-
-    public static int RandomForPattern(RandomOptionsForPattern opts)
-    {
-        var info = RenamerInfo.RandomForPattern(opts);
-        info = RenamerUtils.CheckSafety(opts.GetBaseOptions(), info);
-        RenamerUtils.Rename(opts.GetBaseOptions(), info);
-        return 0;
-    }
-
-    public static int Numerical(NumericalOptions opts)
-    {
-        var info = RenamerInfo.Numerical(opts);
-        info = RenamerUtils.CheckSafety(opts.GetBaseOptions(), info);
-        RenamerUtils.Rename(opts.GetBaseOptions(), info);
-        return 0;
-    }
-
-    public static int Alphabetical(AlphabeticalOptions opts)
-    {
-        var info = RenamerInfo.Alphabetical(opts);
-        info = RenamerUtils.CheckSafety(opts.GetBaseOptions(), info);
-        RenamerUtils.Rename(opts.GetBaseOptions(), info);
-        return 0;
-    }
-
-    public static int Reverse(ReverseOptions opts)
-    {
-        var info = RenamerInfo.Reverse(opts);
-
-        var revDirs = (string[])info.NewDirsNames.Clone(); var revFiles = (string[])info.NewFilesNames.Clone();
-        if (opts.newPath == "" && !opts.notSafe)
+        if (info.BaseOpts.newPath == "" && !info.BaseOpts.notSafe)
         {
-            RenameMethods.Temp(opts.GetBaseOptions().cloneForTempRename());
-            info = RenamerUtils.PrepareRename(opts.GetBaseOptions());
-            info.NewDirsNames = revDirs;
-            info.NewFilesNames = revFiles;
+            var newDirsNames = (string[])info.NewDirsNames.Clone(); var newFilesNames = (string[])info.NewFilesNames.Clone();
+            Temp(info.BaseOpts.cloneForTempRename());
+            info = NamesUtils.GetRenameInfo(info.BaseOpts);
+            info.NewDirsNames = newDirsNames;
+            info.NewFilesNames = newFilesNames;
+        }
+        return info;
+    }
+
+    public static void ApplyRenaming(Info info)
+    {
+        if (info.BaseOpts.path == info.BaseOpts.newPath)
+        {
+            Console.WriteLine("ERROR: path and new-path must be different");
+            Environment.Exit(1);
+        }
+        for (var i = 0; i < info.NewDirsNames.Length; i++)
+        {
+            RenameDir(info.BaseOpts, info.PrevDirsNames[i], info.NewDirsNames[i], 0);
         }
 
-        RenamerUtils.Rename(opts.GetBaseOptions(), info);
-        return 0;
+        for (var i = 0; i < info.NewFilesNames.Length; i++)
+        {
+            RenameFile(info.BaseOpts, info.PrevFilesNames[i], info.NewFilesNames[i], 0);
+        }
     }
 
-    public static int Replace(ReplaceOptions opts)
+    static void RenameDir(BaseOptsObj baseOpts, string src, string distBase, int n)
     {
-        var info = RenamerInfo.Replace(opts);
-        info = RenamerUtils.CheckSafety(opts.GetBaseOptions(), info);
-        RenamerUtils.Rename(opts.GetBaseOptions(), info);
-        return 0;
+        var dist = "";
+        var dot = "";
+        if (src.StartsWith(".")) dot = ".";
+        if (distBase.StartsWith(".")) dot = "";
+
+        distBase = RemoveDisallowedCharacters(distBase);
+        baseOpts.prefix = RemoveDisallowedCharacters(baseOpts.prefix);
+        baseOpts.suffix = RemoveDisallowedCharacters(baseOpts.suffix);
+
+        dist = (n == 0) ? $"{dot}{baseOpts.prefix}{distBase}{baseOpts.suffix}" : $"{dot}{baseOpts.prefix}{distBase}{baseOpts.suffix} ({n})";
+        if (baseOpts.newPath != "")
+        {
+            try
+            {
+                CopyDirectory(Path.Combine(baseOpts.path, src), Path.Combine(baseOpts.newPath, dist));
+            }
+            catch (System.IO.IOException)
+            {
+                RenameDir(baseOpts, src, distBase, n + 1);
+            }
+        }
+        else
+        {
+            try
+            {
+                Directory.Move(Path.Combine(baseOpts.path, src), Path.Combine(baseOpts.path, dist));
+            }
+            catch (System.IO.IOException)
+            {
+                RenameDir(baseOpts, src, distBase, n + 1);
+            }
+        }
     }
 
-    public static int Upper(UpperOptions opts)
+    static void RenameFile(BaseOptsObj baseOpts, string src, string distBase, int n)
     {
-        var info = RenamerInfo.Upper(opts);
-        info = RenamerUtils.CheckSafety(opts.GetBaseOptions(), info);
-        RenamerUtils.Rename(opts.GetBaseOptions(), info);
-        return 0;
+        var dist = "";
+        var dot = "";
+        if (src.StartsWith(".")) dot = ".";
+        if (distBase.StartsWith(".")) dot = "";
+        var ext = GetExtension(src);
+
+        distBase = RemoveDisallowedCharacters(distBase);
+        baseOpts.prefix = RemoveDisallowedCharacters(baseOpts.prefix);
+        baseOpts.suffix = RemoveDisallowedCharacters(baseOpts.suffix);
+
+        dist = (n == 0) ? $"{dot}{baseOpts.prefix}{distBase}{baseOpts.suffix}.{ext}" : $"{dot}{baseOpts.prefix}{distBase}{baseOpts.suffix} ({n}).{ext}";
+        if (baseOpts.newPath != "")
+        {
+            try
+            {
+                File.Copy(Path.Combine(baseOpts.path, (string)src), Path.Combine(baseOpts.newPath, dist));
+            }
+            catch (System.IO.IOException)
+            {
+                RenameFile(baseOpts, src, distBase, n + 1);
+            }
+        }
+        else
+        {
+            try
+            {
+                File.Move(Path.Combine(baseOpts.path, (string)src), Path.Combine(baseOpts.path, dist));
+            }
+            catch (System.IO.IOException)
+            {
+                RenameFile(baseOpts, src, distBase, n + 1);
+            }
+        }
     }
-
-    public static int Lower(LowerOptions opts)
-    {
-        var info = RenamerInfo.Lower(opts);
-        info = RenamerUtils.CheckSafety(opts.GetBaseOptions(), info);
-        RenamerUtils.Rename(opts.GetBaseOptions(), info);
-        return 0;
-    }
-
-    public static int Title(TitleOptions opts)
-    {
-        var info = RenamerInfo.Title(opts);
-        info = RenamerUtils.CheckSafety(opts.GetBaseOptions(), info);
-        RenamerUtils.Rename(opts.GetBaseOptions(), info);
-        return 0;
-    }
-
-    public static int Pattern(PatternOptions opts)
-    {
-        var info = RenamerInfo.Pattern(opts);
-        info = RenamerUtils.CheckSafety(opts.GetBaseOptions(), info);
-        RenamerUtils.Rename(opts.GetBaseOptions(), info);
-        return 0;
-    }
-
-    public static void Temp(BaseOptsObj baseOpts)
+    static void Temp(BaseOptsObj baseOpts)
     {
 
-        var info = RenamerUtils.PrepareRename(baseOpts);
+        var info = NamesUtils.GetRenameInfo(baseOpts);
         var num = 1;
         var zeros = (info.PrevDirsNames.Length + info.PrevFilesNames.Length).ToString().Length;
         var prefix = Guid.NewGuid().ToString().Replace("-", "") + "-";
@@ -106,18 +116,61 @@ class RenameMethods
         for (var i = 0; i < info.NewDirsNames.Length; i++)
         {
             var numToString = num.ToString($"D{zeros}");
-            info.NewDirsNames[i] = numToString;
+            info.NewDirsNames[i] = prefix + numToString;
             num++;
         }
 
         for (var i = 0; i < info.NewFilesNames.Length; i++)
         {
             var numToString = num.ToString($"D{zeros}");
-            info.NewFilesNames[i] = numToString;
+            info.NewFilesNames[i] = prefix + numToString;
             num++;
         }
 
-        RenamerUtils.Rename(baseOpts, info);
+        Renamer.ApplyRenaming(info);
+    }
+
+    // --------------------------------------------------------------------------------------------------------
+    static string RemoveDisallowedCharacters(string name)
+    {
+        var disallowedChars = "\\/:*?\"'<>|";
+
+        foreach (var ch in disallowedChars)
+        {
+            name = name.Replace(ch.ToString(), "");
+        }
+        return name;
+    }
+
+    static string GetExtension(string fileName)
+    {
+        var splitText = fileName.Split(".");
+        var len = splitText.Length;
+
+        if (fileName.StartsWith(".") && len > 2) return splitText.Last();
+        if (!fileName.StartsWith(".") && len >= 2) return splitText.Last();
+        return fileName;
+    }
+
+    static void CopyDirectory(string src, string dist)
+    {
+        var srcDirInfo = new DirectoryInfo(src);
+        if (!srcDirInfo.Exists)
+            throw new DirectoryNotFoundException($"ERROR: Source directory not found: {srcDirInfo.FullName}");
+
+        DirectoryInfo[] dirs = srcDirInfo.GetDirectories();
+        Directory.CreateDirectory(dist);
+
+        foreach (FileInfo file in srcDirInfo.GetFiles())
+        {
+            string targetFilePath = Path.Combine(dist, file.Name);
+            file.CopyTo(targetFilePath);
+        }
+
+        foreach (DirectoryInfo subDir in dirs)
+        {
+            string newDestinationDir = Path.Combine(dist, subDir.Name);
+            CopyDirectory(subDir.FullName, newDestinationDir);
+        }
     }
 }
-
