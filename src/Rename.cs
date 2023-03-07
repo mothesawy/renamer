@@ -149,7 +149,7 @@ class Renamer
 
         if (fileName.StartsWith(".") && len > 2) return splitText.Last();
         if (!fileName.StartsWith(".") && len >= 2) return splitText.Last();
-        return fileName;
+        return "";
     }
 
     static void CopyDirectory(string src, string dist)

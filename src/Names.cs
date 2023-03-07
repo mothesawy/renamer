@@ -226,7 +226,7 @@ static class Names
                 else if (cmd.StartsWith("$ "))
                 {
                     // command
-                    var commandResult = NamesUtils.HandlePatternCommand(cmd, opts, opts.path, info.PrevDirsNames, info.PrevFilesNames);
+                    var commandResult = NamesUtils.HandlePatternCommand(cmd, opts);
                     dirsNamesParts.Add(commandResult[0]);
                     filesNamesParts.Add(commandResult[1]);
                 }

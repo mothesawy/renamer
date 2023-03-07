@@ -4,10 +4,6 @@ using CommandLine.Text;
 
 namespace Renamer;
 
-
-// pattern
-// public and private
-// testing
 class Program
 {
     public static void Main(string[] args)
@@ -15,21 +11,24 @@ class Program
         var stw = new Stopwatch();
         stw.Start();
         var info = Parser.ParseAndGetNames(args);
-        info = Renamer.ApplySafety(info);
-        Renamer.ApplyRenaming(info);
-        Console.WriteLine($"Operation Completed in {stw.ElapsedMilliseconds / 1000.0} second(s).");
+        if (info is not null)
+        {
+            info = Renamer.ApplySafety((Info)info);
+            Renamer.ApplyRenaming((Info)info);
+            Console.WriteLine($"Operation Completed in {stw.ElapsedMilliseconds / 1000.0} second(s).");
+        }
     }
 }
 
 class Parser
 {
-    public static Info ParseAndGetNames(string[] args)
+    public static Info? ParseAndGetNames(string[] args)
     {
         var parser = new CommandLine.Parser(with => with.HelpWriter = null);
         var result = parser.ParseArguments<RandomOptions, NumericalOptions, AlphabeticalOptions,
                                            ReverseOptions, ReplaceOptions, UpperOptions,
                                            LowerOptions, TitleOptions, PatternOptions>(args);
-        var data = new Info();
+        Info? data = null;
 
         result.WithParsed<RandomOptions>(opts => { data = Names.Random(opts); });
         result.WithParsed<NumericalOptions>(opts => { data = Names.Numerical(opts); });

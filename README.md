@@ -485,11 +485,12 @@ Perform renaming with a pattern of text for items' names.
 
 
 ## TODO:
-- [ ] Code and architecture refactoring and performance improvements
-- [ ] Recursive renaming
+- [X] Code and architecture refactoring and performance improvements
+- [ ] File extensions editing
 - [ ] Preview before renaming
 - [ ] Rename by file type and classify files by file type.
 - [ ] Image tags for renaming
 - [ ] Audio tags for renaming
 - [ ] Video tags for renaming
+- [ ] Recursive renaming
 - [ ] Cross-Platform GUI

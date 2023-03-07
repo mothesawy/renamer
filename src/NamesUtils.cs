@@ -168,12 +168,10 @@ class NamesUtils
         return new string[][] { dirsNames, filesNames };
     }
 
-    public static string[][] HandlePatternCommand(string cmd, PatternOptions parentOpts, string path, string[] prevDirsNames, string[] prevFilesNames)
+    public static string[][] HandlePatternCommand(string cmd, PatternOptions parentOpts)
     {
-        var renameCmd = (cmd.Substring(2) + $" -p {path}").Split(" ");
-
+        var renameCmd = (cmd.Substring(2) + $" -p {parentOpts.path}").Split(" ");
         var partialInfo = Parser.ParseAndGetNamesPattern(renameCmd, parentOpts);
-
         return new string[][] { partialInfo.NewDirsNames, partialInfo.NewFilesNames };
     }
 
@@ -203,7 +201,6 @@ class NamesUtils
             if (rng.Length == 0 && every == 0) return num;
             if (rng.Length != 0 && every != 0)
             {
-                System.Console.WriteLine(rng.ToArray().Length);
                 Console.WriteLine("ERROR: You can't use both 'range' and 'every'.");
                 Environment.Exit(1);
             }
